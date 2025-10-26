@@ -54,7 +54,7 @@
             EOF
 
             efi_size=$(stat --format=%s mixos.efi)
-            max_size=$((150 * 1024 * 1024))
+            max_size=$((256 * 1024 * 1024))
             if $((efi_size > max_size)); then
               nixErrorLog "mixos UKI has exceeded max size"
               exit 1
@@ -66,7 +66,7 @@
               --architecture=${systemdArch} \
               --sector-size=512 \
               --empty=create \
-              --size=150M \
+              --size=256M \
               mixos.raw
 
             qemu-img convert -f raw -o subformat=fixed,force_size -O vpc mixos.raw $out
