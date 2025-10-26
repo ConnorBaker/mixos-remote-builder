@@ -6,7 +6,7 @@
 
   boot.kernel = pkgs.linuxKernel.manualConfig {
     inherit (pkgs.linux_6_12) src version;
-    configfile = ./kernel.config;
+    configfile = ./kernel2.config;
   };
 
   bin = [
