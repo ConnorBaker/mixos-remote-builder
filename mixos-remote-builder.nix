@@ -19,8 +19,10 @@
       server time.nist.gov
     '';
 
+    # TODO(@connorbaker): Must log in through Azure console to seed /tmp/host_key and /tmp/authorized_keys until
+    # automated (cloud-init?).
     "ssh/sshd_config".source = pkgs.writeText "sshd_config" ''
-      HostKey /sys/firmware/qemu_fw_cfg/by_name/opt/ssh_key/raw
+      HostKey /tmp/host_key
       AuthorizedKeysFile /tmp/authorized_keys
       PasswordAuthentication no
       StrictModes no
@@ -85,18 +87,6 @@
     dhcp = {
       action = "respawn";
       process = "/bin/udhcpc -f -S";
-    };
-
-    # Copy the keys passed in via fw_cfg into a location that is world-readable.
-    # This is needed since sshd will attempt to open this file with perms that
-    # are not compatible with those that fw_cfg uses by default.
-    setup_authorized_keys = {
-      action = "wait";
-      process = pkgs.writeScript "setup_authorized_keys.sh" ''
-        #!/bin/sh
-        cp /sys/firmware/qemu_fw_cfg/by_name/opt/authorized_keys_file/raw /tmp/authorized_keys
-        chmod 444 /tmp/authorized_keys
-      '';
     };
 
     sshd = {

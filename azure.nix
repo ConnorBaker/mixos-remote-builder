@@ -1,6 +1,16 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 {
-  # bin = [ pkgs.util-linux pkgs.dosfstools pkgs.udftools pkgs.gnuparted pkgs.python3 ];
+  imports = [ ./btrfs ];
+
+  bin = [ pkgs.btrfs-progs ];
+  boot.kernelModules = lib.mkBefore [
+    "hv_vmbus"
+    "hv_storvsc"
+    "hv_netvsc"
+    "hv_utils"
+    "nvme"
+    "pci-hyperv"
+  ];
 
   system.build.vhd =
     pkgs.callPackage
