@@ -76,12 +76,12 @@
       sshd:x:1:sshd
       nixbld:x:2:
     '';
-
-    # wanted by nix-daemon
-    "mdev.conf".source = pkgs.writeText "mdev.conf" ''
-      null 0:0 666
-    '';
   };
+
+  # wanted by nix-daemon
+  mdev.rules = ''
+    null 0:0 666
+  '';
 
   init = {
     dhcp = {
