@@ -1,2 +1,12 @@
+# Nix
 result
 result-*
+
+# Direnv
+.direnv
+.envrc
+
+# Terraform
+.terraform*
+*.tfvars
+terraform.tfstate*

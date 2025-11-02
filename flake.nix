@@ -42,9 +42,23 @@
         {
           config,
           pkgs,
+          system,
           ...
         }:
         {
+          _module.args.pkgs = import inputs.nixpkgs {
+            inherit system;
+            config =
+              { pkgs }:
+              {
+                allowlistedLicenses = [ pkgs.lib.licenses.bsl11 ];
+              };
+          };
+
+          devShells.default = pkgs.mkShell {
+            packages = [ (pkgs.terraform.withPlugins (ps: with ps; [ hashicorp_azurerm ])) ];
+          };
+
           pre-commit.settings.hooks = {
             # Formatter checks
             treefmt = {
