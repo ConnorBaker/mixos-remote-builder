@@ -40,7 +40,7 @@ resource "azurerm_storage_account" "mixos_boot_diag" {
 # TODO: Why was there a mixos_vm-disk1 in the Azure subscription?
 
 resource "azurerm_linux_virtual_machine" "mixos_vm" {
-  name                = "mixos_vm"
+  name                = "mixos-vm"
   location            = azurerm_resource_group.mixos_rg.location
   resource_group_name = azurerm_resource_group.mixos_rg.name
   size                = "Standard_HB120rs_v3"

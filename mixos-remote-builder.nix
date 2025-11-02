@@ -1,7 +1,12 @@
-{ lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   imports = [
-    ./azure.nix
+    ./azure
   ];
 
   boot.kernel = pkgs.linuxKernel.manualConfig {
@@ -35,7 +40,7 @@
       PermitTTY no
       PermitTunnel no
       X11Forwarding no
-      ForceCommand nix-daemon --stdio
+      ForceCommand ${lib.getExe' pkgs.nix "nix-daemon"} --stdio
     '';
 
     "nix/nix.conf".source = pkgs.writeText "nix.conf" ''
@@ -59,45 +64,58 @@
       trusted-users = nix
       use-cgroups = true
     '';
-
-    "passwd".source = pkgs.writeText "passwd" (
-      lib.concatLines [
-        # nix user used for remote building, note that this user's shell must be
-        # a real shell, not something like /bin/nologin
-        "nix:x:0:0:nix:/:/bin/sh"
-
-        # sshd user needed for privilege separation
-        "sshd:x:1:1:sshd:/var/empty:/bin/nologin"
-      ]
-    );
-
-    "group".source = pkgs.writeText "group" ''
-      nix:x:0:nix
-      sshd:x:1:sshd
-      nixbld:x:2:
-    '';
   };
 
   # wanted by nix-daemon
-  mdev.rules = ''
-    null 0:0 666
-  '';
+  mdev.rules =
+    let
+      inherit (config.users.nix) gid uid;
+    in
+    ''
+      null ${toString uid}:${toString gid} 666
+    '';
+
+  # Members of groups are provided in the user config.
+  # Groups have no notion of UIDs.
+  groups = {
+    nix.id = 0;
+    sshd.id = 1;
+    nixbld.id = 2;
+  };
+
+  # Users have both user and group IDs.
+  users = {
+    nix = {
+      uid = 0;
+      gid = config.groups.nix.id;
+      # nix user used for remote building, note that this user's shell must be
+      # a real shell, not something like /bin/nologin
+      shell = lib.getExe' pkgs.busybox "sh";
+    };
+
+    sshd = {
+      # sshd user needed for privilege separation
+      uid = 1;
+      gid = config.groups.sshd.id;
+      shell = lib.getExe' pkgs.busybox "nologin";
+    };
+  };
 
   init = {
     dhcp = {
       action = "respawn";
-      process = "/bin/udhcpc -f -S";
+      process = "${lib.getExe' pkgs.busybox "udhcpc"} -f -S";
     };
 
     sshd = {
       action = "respawn";
-      process = "/bin/sshd";
+      process = lib.getExe' pkgs.busybox "sshd";
     };
 
     shell = {
       tty = "ttyS0";
       action = "askfirst";
-      process = "/bin/sh";
+      process = lib.getExe' pkgs.busybox "sh";
     };
   };
 }

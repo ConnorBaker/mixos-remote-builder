@@ -1,8 +1,15 @@
-{ config, lib, pkgs, ... }:
 {
-  imports = [ ./btrfs ];
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+{
+  imports = [
+    ./btrfs
+    ./ready
+  ];
 
-  bin = [ pkgs.btrfs-progs ];
   boot.kernelModules = lib.mkBefore [
     "hv_vmbus"
     "hv_storvsc"
@@ -60,23 +67,27 @@
             Type=esp
             Format=vfat
             Label=mixos
-            CopyFiles=$(pwd)/mixos.efi:/EFI/boot/boot${pkgs.stdenv.hostPlatform.efiArch}.efi
+            CopyFiles=$PWD/mixos.efi:/EFI/boot/boot${pkgs.stdenv.hostPlatform.efiArch}.efi
             EOF
 
             efi_size=$(stat --format=%s mixos.efi)
-            max_size=$((256 * 1024 * 1024))
-            if $((efi_size > max_size)); then
-              nixErrorLog "mixos UKI has exceeded max size"
-              exit 1
-            fi
+            KiB=1024
+            MiB=$((1024 * KiB))
+
+            # Azure requires the size of VHDs to be a while number in mebibytes
+            azure_vhd_alignment=$((1 * MiB))
+
+            # Extra space for bookkeeping and filesystem data (4 MiB)
+            pad_size=$((4 * MiB))
+            padded_efi_size=$((pad_size + efi_size + azure_vhd_alignment - efi_size % azure_vhd_alignment))
 
             systemd-repart \
               --dry-run=no \
-              --definitions=$(pwd) \
+              --definitions=$PWD \
               --architecture=${systemdArch} \
               --sector-size=512 \
               --empty=create \
-              --size=256M \
+              --size=''${padded_efi_size}B \
               mixos.raw
 
             qemu-img convert -f raw -o subformat=fixed,force_size -O vpc mixos.raw $out

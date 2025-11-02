@@ -13,7 +13,7 @@
           pkgs.gptfdisk # sgdisk
           pkgs.parted
         ];
-        text = lib.fileContents ./init.sh;
+        text = lib.fileContents ./init.bash;
       }
     );
 

@@ -1,4 +1,5 @@
 # Nix
+.cache
 result
 result-*
 
