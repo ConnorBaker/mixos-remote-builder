@@ -78,16 +78,17 @@
   # Members of groups are provided in the user config.
   # Groups have no notion of UIDs.
   groups = {
-    nix.id = 0;
+    root.id = 0;
     sshd.id = 1;
-    nixbld.id = 2;
+    nix.id = 2;
+    nixbld.id = 3;
   };
 
   # Users have both user and group IDs.
   users = {
-    nix = {
+    root = {
       uid = 0;
-      gid = config.groups.nix.id;
+      gid = config.groups.root.id;
       # nix user used for remote building, note that this user's shell must be
       # a real shell, not something like /bin/nologin
       shell = lib.getExe' pkgs.busybox "sh";
@@ -99,6 +100,14 @@
       gid = config.groups.sshd.id;
       shell = lib.getExe' pkgs.busybox "nologin";
     };
+
+    nix = {
+      uid = 2;
+      gid = config.groups.nix.id;
+      # nix user used for remote building, note that this user's shell must be
+      # a real shell, not something like /bin/nologin
+      shell = lib.getExe' pkgs.busybox "sh";
+    };
   };
 
   init = {
@@ -109,7 +118,7 @@
 
     sshd = {
       action = "respawn";
-      process = lib.getExe' pkgs.busybox "sshd";
+      process = lib.getExe' pkgs.openssh "sshd";
     };
 
     shell = {

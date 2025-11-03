@@ -10,6 +10,11 @@
     ./ready
   ];
 
+  bin = [
+    pkgs.cloud-init
+    pkgs.waagent
+  ];
+
   boot.kernelModules = lib.mkBefore [
     "hv_vmbus"
     "hv_storvsc"

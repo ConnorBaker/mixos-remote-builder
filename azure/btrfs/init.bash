@@ -31,7 +31,8 @@ setupBtrfsMntFsVolume() {
   sleep 2
 
   log "Formatting disks"
-  mkfs.btrfs --force --label fs --data raid0 "${disks[@]}"
+  # Don't TRIM because it's slow.
+  mkfs.btrfs --force --label fs --data raid0 --nodiscard "${disks[@]}"
 
   log "Done!"
 }

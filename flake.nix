@@ -56,7 +56,7 @@
           };
 
           devShells.default = pkgs.mkShell {
-            packages = [ (pkgs.terraform.withPlugins (ps: with ps; [ hashicorp_azurerm ])) ];
+            packages = [ (pkgs.terraform.withPlugins (ps: with ps; [ hashicorp_azurerm hashicorp_cloudinit ])) ];
           };
 
           pre-commit.settings.hooks = {

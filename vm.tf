@@ -12,6 +12,15 @@ resource "azurerm_subnet" "mixos_subnet" {
   virtual_network_name = azurerm_virtual_network.mixos_network.name
 }
 
+resource "azurerm_public_ip" "mixos_pip" {
+  name                = "mixos_pip"
+  location            = azurerm_resource_group.mixos_rg.location
+  resource_group_name = azurerm_resource_group.mixos_rg.name
+
+  allocation_method = "Dynamic"
+  sku = "Basic"
+}
+
 resource "azurerm_network_interface" "mixos_nic" {
   name                = "mixos_nic"
   location            = azurerm_resource_group.mixos_rg.location
@@ -24,6 +33,7 @@ resource "azurerm_network_interface" "mixos_nic" {
     primary                       = true
     subnet_id                     = azurerm_subnet.mixos_subnet.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.mixos_pip.id
   }
 }
 
@@ -38,6 +48,24 @@ resource "azurerm_storage_account" "mixos_boot_diag" {
 }
 
 # TODO: Why was there a mixos_vm-disk1 in the Azure subscription?
+# mixos-vm_disk1_c362992f8c5c4d40893763b59a7245b0
+# mixos-remote-builder-image_0_5phl2dodnxb
+# Standard HDD LRS
+
+
+data "cloudinit_config" "cloudinitdata" {
+  gzip          = false
+  base64_encode = true
+
+  part {
+    filename     = "hello-script.sh"
+    content_type = "text/x-shellscript"
+    content      = <<-EOF
+      #!/bin/sh
+      echo "$(date) hello there" >> /tmp/test.log
+    EOF
+  }
+}
 
 resource "azurerm_linux_virtual_machine" "mixos_vm" {
   name                = "mixos-vm"
@@ -72,4 +100,6 @@ resource "azurerm_linux_virtual_machine" "mixos_vm" {
   }
 
   source_image_id = azurerm_image.mixos.id
+
+  custom_data = data.cloudinit_config.cloudinitdata.rendered
 }
